@@ -1,0 +1,10 @@
+# Directories
+/.vscode
+/.venv
+
+# Files
+*.code-workspace
+*.DS_Store
+poetry.lock
+pyproject.toml
+test.py
