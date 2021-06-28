@@ -29,7 +29,6 @@ class API:
             sign = "\u039E"
         price_round = self.cryptos[self.str_price_r][symbol]
         qty_round = self.cryptos[self.str_qty_r][symbol]
-        # Set up a buy for the current price
         trader = gemini.PrivateClient(
             self.pub_key, self.priv_key, sandbox=self.sandbox)
         if limit_price == None:
@@ -53,7 +52,7 @@ class API:
                                str(price), "buy", ["maker-or-cancel"])
         try:
             if buy['result'] == 'error':
-                print(buy['message'])
+                print("\n" + buy['message'])
         except KeyError:
             if buy['is_live']:
                 print(f'\n{sign}{buy_size} buy order posted for {sign}{price}')
@@ -62,11 +61,18 @@ class API:
                     print(
                         f'\nYour limit price: {limit_price} is higher than the current spot price. Please set a limit price lower than the current spot price.')
 
+    def ui_buy(self):
+        symbol = self.ask_symbol()
+        amount = self.ask_amount()
+        limit = self.ask_limit()
+        self.buy(symbol, amount, limit)
+
     def ask_symbol(self):
+        str_symbols = "\n".join(self.symbols)
         while True:
             try:
                 symbol = str(
-                    input("\nEnter crypto symbol [Choose from below]\nETHUSD\nLINKUSD\nMKRUSD\nZRXUSD\nBNTUSD\nCOMPUSD\nAAVEUSD\nBALUSD\nCRVUSD\nSNXUSD\nUNIUSD\nYFIUSD\n1INCHUSD\nSKLUSD\nGRTUSD\nLRCUSD\nBONDUSD\nMATICUSD\nSUSHIUSD\nALCXUSD\nETHBTC\nBTCUSD\t\t: ")).upper()
+                    input(f"\nEnter crypto symbol [Choose from below]\n{str_symbols}\t: ")).upper()
             except ValueError:
                 print("\nERROR: Invalid Input")
                 continue
@@ -120,11 +126,8 @@ class API:
 
 
 if __name__ == '__main__':
-    # Buy size dollars of Crypto at limit price of price. If you leave price to be None the script will populate the limit price for you to be just under the current spot price
-
-    api = API(config.keys, sandbox=True)
-    # api = API(config.keys)
-    symbol = api.ask_symbol()
-    amount = api.ask_amount()
-    limit = api.ask_limit()
-    api.buy(symbol, amount, limit)
+    api = API(config.keys, sandbox=True)  # Sandbox mode
+    # api = API(config.keys)  # Real mode
+    # api.buy("ETHUSD", 50, 1500)  # Buy $50 of ETH at $1500 price
+    # api.buy("ETHUSD", 50)  # Buy $50 of ETH at slightly below spot price
+    api.ui_buy()  # Buy what you want by answering the given questions
