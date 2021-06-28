@@ -7,4 +7,6 @@
 *.DS_Store
 poetry.lock
 pyproject.toml
+buy-ether.py
 test.py
+config.py
