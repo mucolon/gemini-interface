@@ -24,4 +24,4 @@ A repo for python scripts that execute buy orders for crypto on Gemini
 
 3. Read `api.py` script. Most importantly read after `if __name__ == '__main__':` for a brief explanation how to execute orders.
 
-4. Never share your API Keys or `config.py` as anyone with your keys can control your account. I would recommend adding `config.py` to your `.gitignore` file.
+4. Never share your API Keys or `config.py` as anyone with your keys can control your account. I would recommend making sure `config.py` is in your `.gitignore` file.
