@@ -84,7 +84,8 @@ class API:
         side ['buy', 'sell']: trade side
         size [int|float]: size of trade in pair denomination eg. $50 if buying or Ξ0.05 if selling
         limit_price [int|float|None]: limit price or None for spot price
-        fee [int|float]: trading fee in bps. eg. 10bps = 0.10%
+        fee [int|float]: trading fee in bps. eg. 10bps = 0.10%. NOTE: API limit orders cost 10bps but API may require trade to account for normal 35bps fee. At the time of the trade you'll be charged 10bps and be left with 25bps difference in cash.
+        option ['maker-or-cancel']: type of trade. NOTE: Leave this alone.
         """
         price_round = self.cryptos[self.str_price_r][pair]
         qty_round = self.cryptos[self.str_qty_r][pair]
@@ -159,14 +160,14 @@ if __name__ == "__main__":
     # fee = 10
 
     # # Buy $50 of ETH at $1500 price
-    # api.trade('ETHUSD', 'buy', 50, 1500)
+    # api.trade('ETHUSD', 'buy', 50, 1500, fee)
     # # Buy $50 of ETH at slightly below spot price
-    # api.trade('ETHUSD', 'buy', 50)
+    # api.trade('ETHUSD', 'buy', 50, fee)
     # # Sell Ξ1 at slightly below spot price for USD
-    # api.trade('ETHUSD', 'sell', 1)
+    # api.trade('ETHUSD', 'sell', 1, fee)
 
     api.balance()
-    # api.trade("ETHUSD", "buy", 88.82, 3246.65, fee=fee)
+    # api.trade("ETHUSD", "buy", 88.82, limit_price=3246.65, fee=fee)
     # api.trade("BONDUSD", "sell", 0.479012, limit_price=41.7944)
     # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3864)
     # api.trade("ALCXUSD", "sell", 0.055173, limit_price=453.22)
