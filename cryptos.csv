@@ -1,4 +1,4 @@
-Symbol,Price_round,Qty_round
+Pairs,Price_round,Qty_round
 ETHUSD,2,6
 LINKUSD,5,6
 MKRUSD,2,6
@@ -19,5 +19,7 @@ BONDUSD,4,6
 MATICUSD,5,6
 SUSHIUSD,4,6
 ALCXUSD,2,6
+DAIUSD,5,6
+GUSDUSD,2,2
 ETHBTC,5,6
 BTCUSD,2,8

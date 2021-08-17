@@ -1,133 +1,172 @@
 import gemini
 import pandas as pd
+import math
+import sys
 import config
 
 
-class API:
+def floor(number, digits):
+    factor = 10 ** digits
+    return math.floor(number * factor) / factor
 
+
+def ceil(number, digits):
+    factor = 10 ** digits
+    return math.ceil(number * factor) / factor
+
+
+class API:
     def __init__(self, keys, sandbox=False):
-        cryptos = pd.read_csv("cryptos.csv", index_col="Symbol").to_dict()
+        cryptos = pd.read_csv("cryptos.csv", index_col="Pairs").to_dict()
         _ = list(cryptos.keys())
         self.str_price_r = _[0]
         self.str_qty_r = _[1]
-        self.symbols = list(cryptos[self.str_price_r].keys())
+        self.pairs = list(cryptos[self.str_price_r].keys())
         self.cryptos = cryptos
-        self.sandbox = sandbox
         if sandbox:
-            self.pub_key = keys["sandbox"]["pub_key"]
-            self.priv_key = keys["sandbox"]["priv_key"]
+            pub_key = keys["sandbox"]["pub_key"]
+            priv_key = keys["sandbox"]["priv_key"]
         else:
-            self.pub_key = keys["real"]["pub_key"]
-            self.priv_key = keys["real"]["priv_key"]
+            pub_key = keys["real"]["pub_key"]
+            priv_key = keys["real"]["priv_key"]
+        self.trader = gemini.PrivateClient(pub_key, priv_key, sandbox)
 
-    def buy(self, symbol, buy_size, limit_price=None):
-        if symbol[-3:] == "USD":
-            sign = "$"
-        if symbol[-3:] == "BTC":
-            sign = "\u20BF"
-        if symbol[-3:] == "ETH":
-            sign = "\u039E"
-        price_round = self.cryptos[self.str_price_r][symbol]
-        qty_round = self.cryptos[self.str_qty_r][symbol]
-        trader = gemini.PrivateClient(
-            self.pub_key, self.priv_key, sandbox=self.sandbox)
-        if limit_price == None:
-            ask = trader.get_ticker(symbol)['ask']
-            bid = trader.get_ticker(symbol)['bid']
-            trade = bid
-            if bid == None:
-                trade = ask
+    def separate_pair(self, pair):
+        """Separate pair symbol into list with individual string symbols"""
+        symbols = ["USD", "ETH", "BTC"]
+        pair_symbols = []
+        i = 0
+        while len(pair_symbols) != 2:
             try:
-                price = round(float(trade)*.998, price_round)
+                pair_symbols = pair.split(symbols[i])
+            except IndexError:
+                print("ERROR: Cannot split pair into symbols.")
+                sys.exit(1)
+            if len(pair_symbols) == 2:
+                if pair_symbols[0] == "":
+                    pair_symbols[0] = symbols[i]
+                else:
+                    pair_symbols[1] = symbols[i]
+            else:
+                i += 1
+        return pair_symbols
+
+    def balance(self, pair=None):
+        """Display available symbol balances to trade"""
+        balances = self.trader.get_balance()
+        symbols = [balances[i]["currency"] for i in range(len(balances))]
+        qty = [float(balances[i]["available"]) for i in range(len(balances))]
+        str_available = "".join(
+            [i + "\t" + str(j) + "\n" for i, j in zip(symbols, qty)]
+        )
+        str_available = str_available[:-1]
+        if pair == None:
+            print("\nAvailable Balances:")
+            print(str_available)
+        else:
+            pair_symbols = self.separate_pair(pair)
+            index_symbols = [symbols.index(i) for i in pair_symbols]
+            pair_qty = [qty[i] for i in index_symbols]
+            str_available = "".join(
+                [i + "\t" + str(j) + "\n" for i, j in zip(pair_symbols, pair_qty)]
+            )
+            str_available = str_available[:-1]
+            print("\nAvailable Balances:")
+            print(str_available)
+            self.pair_symbols = pair_symbols
+            self.pair_qty = pair_qty
+
+    def trade(
+        self, pair, side, size, limit_price=None, fee=10, option="maker-or-cancel"
+    ):
+        """Trade any supported pair at spot or at limit price.
+        pair [str]: string trading pair. eg. 'ETHUSD'
+        side ['buy', 'sell']: trade side
+        size [int|float]: size of trade in pair denomination eg. $50 if buying or Ξ0.05 if selling
+        limit_price [int|float|None]: limit price or None for spot price
+        fee [int|float]: trading fee in bps. eg. 10bps = 0.10%
+        """
+        price_round = self.cryptos[self.str_price_r][pair]
+        qty_round = self.cryptos[self.str_qty_r][pair]
+        if limit_price == None:
+            ask = self.trader.get_ticker(pair)["ask"]
+            bid = self.trader.get_ticker(pair)["bid"]
+            if side == "sell":
+                cte = 1.001  # 0.1% above ask
+                price = ask
+                if ask == None:  # sometimes ask isn't available
+                    cte = 1.003  # 0.3% above bid
+                    price = bid
+            else:
+                cte = 0.999  # 0.1% below bid
+                price = bid
+                if bid == None:  # sometimes bid isn't available
+                    cte = 0.997  # 0.3% below ask
+                    price = ask
+            try:
+                price = round(float(price) * cte, price_round)
             except TypeError:
-                print("\nERROR: Market lacks liquidity around spot price")
+                print("\nERROR: Market lacks liquidity around spot price.")
         else:
             price = limit_price
 
-        # most precise rounding + *.999 for fee inclusion
-        quantity = round((buy_size*.999)/price, qty_round)
+        if side == "buy":
+            cte = 1 - (fee / 1e4)
+            qty = floor((size * cte) / price, qty_round)
+        else:
+            qty = floor(size, qty_round)
+        trade = self.trader.new_order(pair, str(qty), str(price), side, [option])
 
-        # execute maker buy, round to _ decimal places for precision
-        buy = trader.new_order(symbol, str(quantity),
-                               str(price), "buy", ["maker-or-cancel"])
+        if pair[-3:] == "USD":
+            sign = "$"
+        elif pair[-3:] == "BTC":
+            sign = "₿"  # \u20BF
+        elif pair[-3:] == "ETH":
+            sign = "Ξ"  # \u039E
+        pair_symbols = self.separate_pair(pair)
+        num = pair_symbols[0]
+        den = pair_symbols[1]
+
         try:
-            if buy['result'] == 'error':
-                print("\n" + buy['message'])
+            if trade["result"] == "error":
+                print("\n" + trade["reason"])
+                print(trade["message"] + ". Try 35bps fee.")
+                print(f"\n{fee = }")
         except KeyError:
-            if buy['is_live']:
-                print(f'\n{sign}{buy_size} buy order posted for {sign}{price}')
+            if trade["is_live"]:
+                if side == "sell":
+                    print(f"\n{size}{num} listed to sell at {sign}{price} for {den}")
+                else:
+                    print(f"\n{size}{den} listed to buy {num} at {sign}{price}")
             else:
-                if buy['reason'] == 'MakerOrCancelWouldTake':
-                    print(
-                        f'\nYour limit price: {limit_price} is higher than the current spot price. Please set a limit price lower than the current spot price.')
-
-    def ui_buy(self):
-        symbol = self.ask_symbol()
-        amount = self.ask_amount()
-        limit = self.ask_limit()
-        self.buy(symbol, amount, limit)
-
-    def ask_symbol(self):
-        str_symbols = "\n".join(self.symbols)
-        while True:
-            try:
-                symbol = str(
-                    input(f"\nEnter crypto symbol [Choose from below]\n{str_symbols}\t: ")).upper()
-            except ValueError:
-                print("\nERROR: Invalid Input")
-                continue
-            if symbol not in self.symbols:
-                print("\nERROR: Symbol not supported, input from provided list")
-                continue
-            else:
-                break
-        self.symbol = symbol
-        return symbol
-
-    def ask_amount(self):
-        while True:
-            try:
-                buy_size = float(
-                    input(f"\nEnter buy amount in {self.symbol} denomination: "))
-            except ValueError:
-                print("\nERROR: Invalid Input")
-                continue
-            if buy_size < 0:
-                print("\nERROR: Buy amount cannot be negative")
-                continue
-            elif buy_size == 0:
-                print("\nERROR: Buy amount cannot be zero")
-                continue
-            else:
-                break
-        return buy_size
-
-    def ask_limit(self):
-        while True:
-            try:
-                limit_price = str(
-                    input(f"\nEnter limit price in {self.symbol} denomination\nor Press [Enter] to place order slightly below spot: "))
-            except ValueError:
-                print("\nERROR: Invalid Input")
-                continue
-            if limit_price == "":
-                limit_price = None
-                break
-            elif float(limit_price) < 0:
-                print("\nERROR: Limit price cannot be negative")
-                continue
-            elif float(limit_price) == 0:
-                print("\nERROR: Limit price cannot be zero")
-                continue
-            else:
-                limit_price = float(limit_price)
-                break
-        return limit_price
+                if trade["reason"] == "MakerOrCancelWouldTake":
+                    if side == "sell":
+                        print(
+                            f"\nYour limit price: {limit_price} is lower than the current spot price. Please set a limit price higher than the current spot price."
+                        )
+                    else:
+                        print(
+                            f"\nYour limit price: {limit_price} is higher than the current spot price. Please set a limit price lower than the current spot price."
+                        )
 
 
-if __name__ == '__main__':
-    api = API(config.keys, sandbox=True)  # Sandbox mode
-    # api = API(config.keys)  # Real mode
-    # api.buy("ETHUSD", 50, 1500)  # Buy $50 of ETH at $1500 price
-    # api.buy("ETHUSD", 50)  # Buy $50 of ETH at slightly below spot price
-    api.ui_buy()  # Buy what you want by answering the given questions
+if __name__ == "__main__":
+    # api = API(config.keys, sandbox=True)  # Sandbox mode
+    api = API(config.keys)  # Real mode
+    # maker = 10
+    # taker = 35
+    fee = 35
+    # fee = 10
+
+    # # Buy $50 of ETH at $1500 price
+    # api.trade('ETHUSD', 'buy', 50, 1500)
+    # # Buy $50 of ETH at slightly below spot price
+    # api.trade('ETHUSD', 'buy', 50)
+    # # Sell Ξ1 at slightly below spot price for USD
+    # api.trade('ETHUSD', 'sell', 1)
+
+    api.balance()
+    # api.trade("ETHUSD", "buy", 88.82, 3246.65, fee=fee)
+    # api.trade("BONDUSD", "sell", 0.479012, limit_price=41.7944)
+    # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3864)
+    # api.trade("ALCXUSD", "sell", 0.055173, limit_price=453.22)

@@ -1,6 +1,8 @@
 # Directories
+/__pycache__
 /.vscode
 /.venv
+/tools
 
 # Files
 *.code-workspace
