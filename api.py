@@ -154,20 +154,19 @@ class API:
 if __name__ == "__main__":
     # api = API(config.keys, sandbox=True)  # Sandbox mode
     api = API(config.keys)  # Real mode
-    # maker = 10
-    # taker = 35
+    # maker: 10bps
+    # taker: 35bps
     fee = 35
     # fee = 10
 
-    # # Buy $50 of ETH at $1500 price
-    # api.trade('ETHUSD', 'buy', 50, 1500, fee)
-    # # Buy $50 of ETH at slightly below spot price
-    # api.trade('ETHUSD', 'buy', 50, fee)
-    # # Sell Ξ1 at slightly below spot price for USD
-    # api.trade('ETHUSD', 'sell', 1, fee)
+    """ Examples
+    api.trade("ETHUSD", "buy", 50, 1500, fee)  # Buy $50 of ETH at $1500 price
+    api.trade("ETHUSD", "buy", 50, fee=fee)    # Buy $50 of ETH at slightly below spot price
+    api.trade("ETHUSD", "sell", 1, fee=fee)    # Sell Ξ1 at slightly below spot price for USD
+    """
 
     api.balance()
-    # api.trade("ETHUSD", "buy", 88.82, limit_price=3246.65, fee=fee)
+    # api.trade("ETHUSD", "buy", 60.23, fee=fee)
     # api.trade("BONDUSD", "sell", 0.479012, limit_price=41.7944)
     # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3864)
     # api.trade("ALCXUSD", "sell", 0.055173, limit_price=453.22)
