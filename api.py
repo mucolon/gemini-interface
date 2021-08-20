@@ -162,7 +162,7 @@ if __name__ == "__main__":
     """ Examples
     api.trade("ETHUSD", "buy", 50, 1500, fee)  # Buy $50 of ETH at $1500 price
     api.trade("ETHUSD", "buy", 50, fee=fee)    # Buy $50 of ETH at slightly below spot price
-    api.trade("ETHUSD", "sell", 1, fee=fee)    # Sell Ξ1 at slightly below spot price for USD
+    api.trade("ETHUSD", "sell", 1, fee=fee)    # Sell Ξ1 at slightly above spot price for USD
     """
 
     api.balance()
