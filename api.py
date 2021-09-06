@@ -169,4 +169,4 @@ if __name__ == "__main__":
     # api.trade("ETHUSD", "buy", 15.15, fee=fee)
     # api.trade("BONDUSD", "sell", 0.479012, limit_price=41.7944)
     # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3864)
-    # api.trade("ALCXUSD", "sell", 0.055173, limit_price=453.22)
+    # api.trade("ALCXUSD", "sell", 0.05521739783673434, limit_price=460)
