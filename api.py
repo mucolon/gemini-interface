@@ -31,6 +31,21 @@ class API:
             priv_key = keys["real"]["priv_key"]
         self.trader = gemini.PrivateClient(pub_key, priv_key, sandbox)
 
+    def pair_price_rounding(self, pair):
+        """Return pair price decimal rounding"""
+        price_round = self.cryptos[self.str_price_r][pair]
+        return price_round
+
+    def pair_denomination(self, pair):
+        """Return the denomination symbol of the pair"""
+        if pair[-3:] == "USD":
+            sign = "$"
+        elif pair[-3:] == "BTC":
+            sign = "₿"  # \u20BF
+        elif pair[-3:] == "ETH":
+            sign = "Ξ"  # \u039E
+        return sign
+
     def separate_pair(self, pair):
         """Separate pair symbol into list with individual string symbols"""
         symbols = ["USD", "ETH", "BTC"]
@@ -76,6 +91,15 @@ class API:
             self.pair_symbols = pair_symbols
             self.pair_qty = pair_qty
 
+    def breakeven(self, pair, amount, cost, fee=10):
+        """Return the sell price to breakeven after trading fees"""
+        fee = fee * 1e-4  # bps * 1e-4 = percent * 1e-2 = float
+        ave_buy = cost / amount
+        _breakeven = ave_buy / (1 - fee)
+        _breakeven = ceil(_breakeven, self.pair_price_rounding(pair))
+        sign = self.pair_denomination(pair)
+        print(f"\n{pair} Breakeven Price: {sign} {_breakeven}")
+
     def trade(
         self, pair, side, size, limit_price=None, fee=10, option="maker-or-cancel"
     ):
@@ -118,12 +142,7 @@ class API:
             qty = floor(size, qty_round)
         trade = self.trader.new_order(pair, str(qty), str(price), side, [option])
 
-        if pair[-3:] == "USD":
-            sign = "$"
-        elif pair[-3:] == "BTC":
-            sign = "₿"  # \u20BF
-        elif pair[-3:] == "ETH":
-            sign = "Ξ"  # \u039E
+        sign = self.pair_denomination(pair)
         pair_symbols = self.separate_pair(pair)
         num = pair_symbols[0]
         den = pair_symbols[1]
@@ -136,9 +155,9 @@ class API:
         except KeyError:
             if trade["is_live"]:
                 if side == "sell":
-                    print(f"\n{size}{num} listed to sell at {sign}{price} for {den}")
+                    print(f"\n{size} {num} listed to sell at {sign}{price} for {den}")
                 else:
-                    print(f"\n{size}{den} listed to buy {num} at {sign}{price}")
+                    print(f"\n{size} {den} listed to buy {num} at {sign}{price}")
             else:
                 if trade["reason"] == "MakerOrCancelWouldTake":
                     if side == "sell":
@@ -167,6 +186,10 @@ if __name__ == "__main__":
 
     api.balance()
     # api.trade("ETHUSD", "buy", 15.15, fee=fee)
-    # api.trade("BONDUSD", "sell", 0.479012, limit_price=41.7944)
-    # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3864)
+
+    # api.breakeven("BNTUSD", 5.567804, 29.97)
+    # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3882)
     # api.trade("ALCXUSD", "sell", 0.05521739783673434, limit_price=460)
+    # api.trade("GRTUSD", "sell", 15.15, fee=fee)
+    # api.trade("SNXUSD", "sell", 15.15, fee=fee)
+    # api.trade("LINKETH", "sell", 15.15, fee=fee)

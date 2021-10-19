@@ -11,4 +11,3 @@ pyproject.toml
 buy-ether.py
 test.py
 config.py
-/tools/stablecoin-math.py
