@@ -1,6 +1,6 @@
-# Gemini
+# gemini-interface
 
-A repo for python scripts that execute buy orders for crypto on Gemini
+A repo for python scripts that execute buy/sell orders for crypto on Gemini
 
 ## How to make this repo work for you
 
