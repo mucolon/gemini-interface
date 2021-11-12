@@ -1,18 +1,18 @@
 import math
 
 
-def deposit2recoup(days, apy, fee):
-    """Desposit required to overcome fee costs with days and apy constraints.
+def deposit2recoup(days, _yield, fee):
+    """Desposit required to overcome fee costs with days and _yield constraints.
     days [int|float]: Number of days for fee cost to be offset
-    apy [int|float]: Investment APY as a percent, method will convert to decimal form
+    _yield [int|float]: Investment yield as a percent, method will convert to decimal form
     fee [int|float]: Fee cost in USD
     """
     c1 = 365.25
-    apy = apy / 100
+    _yield = _yield / 100
 
-    l1 = math.log(1 + apy) / c1
-    l2 = math.exp(days * l1)
-    amount = (fee * l2) / (l2 - 1)
+    l1 = math.log(1 + _yield) / c1
+    l2 = math.exp(days * l1) - 1
+    amount = fee / l2
     fee_percent = 100 * fee / amount
 
     print(f"\nDays: {days}")
@@ -20,18 +20,18 @@ def deposit2recoup(days, apy, fee):
     print(f"Fee cost: -{round(fee_percent, 2)}%")
 
 
-def days2recoup(amount, apy, fee):
-    """Days required to overcome fee costs with amount and apy constraints.
+def days2recoup(amount, _yield, fee):
+    """Days required to overcome fee costs with amount and _yield constraints.
     amount [int|float]: Initial investment amount
-    apy [int|float]: Investment APY as a percent, method will convert to decimal form
+    _yield [int|float]: Investment yield as a percent, method will convert to decimal form
     fee [int|float]: Fee cost in USD
     """
     c1 = 365.25
-    apy = apy / 100
+    _yield = _yield / 100
 
-    k1 = amount / (amount - fee)
+    k1 = (amount + fee) / amount
     k2 = math.log(k1)
-    k3 = math.log(1 + apy)
+    k3 = math.log(1 + _yield)
     days = c1 * k2 / k3
     fee_percent = 100 * fee / amount
 
@@ -42,10 +42,10 @@ def days2recoup(amount, apy, fee):
 
 if __name__ == "__main__":
     day_offset = 14
-    investment = 0.1174
-    apy = 0.05 + 4.12
-    fee = 0.00074875528453
+    investment = 0.0445
+    _yield = 81.379
+    fee = 0.00145956672053
 
-    deposit2recoup(day_offset, apy, fee)
-    days2recoup(investment, apy, fee)
+    deposit2recoup(day_offset, _yield, fee)
+    days2recoup(investment, _yield, fee)
     print()

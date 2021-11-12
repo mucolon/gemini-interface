@@ -17,6 +17,7 @@ def ceil(number, digits):
 
 class API:
     def __init__(self, keys, sandbox=False):
+        """Interface module that interacts with the Gemini API"""
         cryptos = pd.read_csv("cryptos.csv", index_col="Pairs").to_dict()
         _ = list(cryptos.keys())
         self.str_price_r = _[0]
@@ -66,8 +67,11 @@ class API:
                 i += 1
         return pair_symbols
 
-    def balance(self, pair=None):
-        """Display available symbol balances to trade"""
+    def balance(self, pair=None, symbol_return=None):
+        """Display available symbol balances to trade.
+        pair parameter prints only pair balances.
+        symbol_return parameter returns the quantity of the symbol.
+        """
         balances = self.trader.get_balance()
         symbols = [balances[i]["currency"] for i in range(len(balances))]
         qty = [float(balances[i]["available"]) for i in range(len(balances))]
@@ -75,21 +79,26 @@ class API:
             [i + "\t" + str(j) + "\n" for i, j in zip(symbols, qty)]
         )
         str_available = str_available[:-1]
-        if pair == None:
-            print("\nAvailable Balances:")
-            print(str_available)
+        if symbol_return is not None:
+            index = symbols.index(symbol_return)
+            symbol_qty = qty[index]
+            return symbol_qty
         else:
-            pair_symbols = self.separate_pair(pair)
-            index_symbols = [symbols.index(i) for i in pair_symbols]
-            pair_qty = [qty[i] for i in index_symbols]
-            str_available = "".join(
-                [i + "\t" + str(j) + "\n" for i, j in zip(pair_symbols, pair_qty)]
-            )
-            str_available = str_available[:-1]
-            print("\nAvailable Balances:")
-            print(str_available)
-            self.pair_symbols = pair_symbols
-            self.pair_qty = pair_qty
+            if pair == None:
+                print("\nAvailable Balances:")
+                print(str_available)
+            else:
+                pair_symbols = self.separate_pair(pair)
+                index_symbols = [symbols.index(i) for i in pair_symbols]
+                pair_qty = [qty[i] for i in index_symbols]
+                str_available = "".join(
+                    [i + "\t" + str(j) + "\n" for i, j in zip(pair_symbols, pair_qty)]
+                )
+                str_available = str_available[:-1]
+                print("\nAvailable Balances:")
+                print(str_available)
+                self.pair_symbols = pair_symbols
+                self.pair_qty = pair_qty
 
     def breakeven(self, pair, amount, cost, fee=10):
         """Return the sell price to breakeven after trading fees"""
@@ -117,13 +126,13 @@ class API:
             ask = self.trader.get_ticker(pair)["ask"]
             bid = self.trader.get_ticker(pair)["bid"]
             if side == "sell":
-                cte = 1.001  # 0.1% above ask
+                cte = 1.0005  # 0.05% above ask
                 price = ask
                 if ask == None:  # sometimes ask isn't available
                     cte = 1.003  # 0.3% above bid
                     price = bid
             else:
-                cte = 0.999  # 0.1% below bid
+                cte = 0.9995  # 0.05% below bid
                 price = bid
                 if bid == None:  # sometimes bid isn't available
                     cte = 0.997  # 0.3% below ask
@@ -181,15 +190,11 @@ if __name__ == "__main__":
     """ Examples
     api.trade("ETHUSD", "buy", 50, 1500, fee)  # Buy $50 of ETH at $1500 price
     api.trade("ETHUSD", "buy", 50, fee=fee)    # Buy $50 of ETH at slightly below spot price
-    api.trade("ETHUSD", "sell", 1, fee=fee)    # Sell Ξ1 at slightly above spot price for USD
+    api.trade("ETHUSD", "sell", 1)             # Sell Ξ1 at slightly above spot price for USD
     """
 
     api.balance()
-    # api.trade("ETHUSD", "buy", 15.15, fee=fee)
+    # api.trade("ETHUSD", "buy", 49.5, fee=fee)
 
-    # api.breakeven("BNTUSD", 5.567804, 29.97)
-    # api.trade("BNTUSD", "sell", 5.567804, limit_price=5.3882)
-    # api.trade("ALCXUSD", "sell", 0.05521739783673434, limit_price=460)
-    # api.trade("GRTUSD", "sell", 15.15, fee=fee)
-    # api.trade("SNXUSD", "sell", 15.15, fee=fee)
-    # api.trade("LINKETH", "sell", 15.15, fee=fee)
+    # bat = api.balance(symbol_return="BAT")
+    # api.trade("BATETH", "sell", bat)
