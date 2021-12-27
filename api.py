@@ -1,3 +1,4 @@
+#!./.venv/bin/python
 import gemini
 import pandas as pd
 import math
@@ -194,7 +195,7 @@ if __name__ == "__main__":
     """
 
     api.balance()
-    # api.trade("ETHUSD", "buy", 49.5, fee=fee)
+    # api.trade("ETHUSD", "buy", 100, limit_price=4025, fee=fee)
+    # api.trade("YFIUSD", "buy", 200.01, limit_price=30500, fee=fee)
 
-    # bat = api.balance(symbol_return="BAT")
-    # api.trade("BATETH", "sell", bat)
+    # api.trade("BATETH", "sell", api.balance(symbol_return="BAT"))

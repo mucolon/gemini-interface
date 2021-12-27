@@ -9,5 +9,6 @@
 poetry.lock
 pyproject.toml
 buy-ether.py
+buy-yfi.py
 test.py
 config.py

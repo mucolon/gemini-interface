@@ -41,10 +41,10 @@ def days2recoup(amount, _yield, fee):
 
 
 if __name__ == "__main__":
-    day_offset = 14
-    investment = 0.0445
-    _yield = 81.379
-    fee = 0.00145956672053
+    day_offset = 30
+    investment = 0.13
+    _yield = 20
+    fee = 0.0025
 
     deposit2recoup(day_offset, _yield, fee)
     days2recoup(investment, _yield, fee)
