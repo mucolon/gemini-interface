@@ -10,5 +10,6 @@ poetry.lock
 pyproject.toml
 buy-ether.py
 buy-yfi.py
+buy-usdc.py
 test.py
 config.py

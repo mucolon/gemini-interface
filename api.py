@@ -55,7 +55,7 @@ class API:
         i = 0
         while len(pair_symbols) != 2:
             try:
-                pair_symbols = pair.split(symbols[i])
+                pair_symbols = pair.rsplit(symbols[i], 1)
             except IndexError:
                 print("ERROR: Cannot split pair into symbols.")
                 sys.exit(1)
@@ -111,7 +111,7 @@ class API:
         print(f"\n{pair} Breakeven Price: {sign} {_breakeven}")
 
     def trade(
-        self, pair, side, size, limit_price=None, fee=10, option="maker-or-cancel"
+        self, pair, side, size, limit_price=None, fee=35, option="maker-or-cancel"
     ):
         """Trade any supported pair at spot or at limit price.
         pair [str]: string trading pair. eg. 'ETHUSD'
@@ -144,7 +144,7 @@ class API:
                 print("\nERROR: Market lacks liquidity around spot price.")
         else:
             price = limit_price
-
+        size = floor(size, qty_round)
         if side == "buy":
             cte = 1 - (fee / 1e4)
             qty = floor((size * cte) / price, qty_round)
@@ -185,17 +185,25 @@ if __name__ == "__main__":
     api = API(config.keys)  # Real mode
     # maker: 10bps
     # taker: 35bps
-    fee = 35
+    # fee = 35
     # fee = 10
 
     """ Examples
-    api.trade("ETHUSD", "buy", 50, 1500, fee)  # Buy $50 of ETH at $1500 price
-    api.trade("ETHUSD", "buy", 50, fee=fee)    # Buy $50 of ETH at slightly below spot price
-    api.trade("ETHUSD", "sell", 1)             # Sell Ξ1 at slightly above spot price for USD
+    api.trade("ETHUSD", "buy", 50, 1500)  # Buy $50 of ETH at $1500 price
+    api.trade("ETHUSD", "buy", 50)        # Buy $50 of ETH at slightly below spot price
+    api.trade("ETHUSD", "sell", 1)        # Sell Ξ1 at slightly above spot price for USD
     """
 
     api.balance()
-    # api.trade("ETHUSD", "buy", 100, limit_price=4025, fee=fee)
-    # api.trade("YFIUSD", "buy", 200.01, limit_price=30500, fee=fee)
+    # api.trade("ETHUSD", "buy", 4.51)
+    # api.trade("ETHUSD", "buy", 300, limit_price=2989.49)
+
+    # api.trade("ETHBTC", "buy", api.balance(symbol_return="BTC"))
+
+    # api.trade("YFIUSD", "buy", 196.62)
+    # api.trade("YFIUSD", "buy", 200.01, limit_price=30500)
+
+    # api.trade("USDCUSD", "buy", api.balance(symbol_return="USD"), limit_price=0.99825)
 
     # api.trade("BATETH", "sell", api.balance(symbol_return="BAT"))
+    # api.trade("BATUSD", "sell", api.balance(symbol_return="BAT"))
