@@ -4,7 +4,7 @@ A repo to execute Gemini Exchange trades at lower fees than their Web App.
 
 ## How to make this repo work for you
 
-1. Create a `config.py` file this format
+1. Create a `config.py` file with this format
    ```python
    keys = {
       "real": {
@@ -17,8 +17,10 @@ A repo to execute Gemini Exchange trades at lower fees than their Web App.
       },
    }
    ```
-   *Create a Sandbox Exchange Account for its respective API*
-   *[https://exchange.sandbox.gemini.com/](https://exchange.sandbox.gemini.com/)*
+   *Create your Gemini API key here*
+   *[https://exchange.gemini.com/settings/api](https://exchange.gemini.com/settings/api)*
+   *Create your Gemini Sandbox API key here, if you want to test it out first*
+   *[https://exchange.sandbox.gemini.com/settings/api](https://exchange.sandbox.gemini.com/settings/api)*
 
 2. Add missing pairs to trade on `cryptos.csv`
    * `Price_round`: The amount of significant figures after the decimal point for any given pair's price.

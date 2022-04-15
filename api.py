@@ -203,7 +203,8 @@ if __name__ == "__main__":
     # api.trade("YFIUSD", "buy", 196.62)
     # api.trade("YFIUSD", "buy", 200.01, limit_price=30500)
 
-    # api.trade("USDCUSD", "buy", api.balance(symbol_return="USD"), limit_price=0.99825)
+    # api.trade("USDCUSD", "buy", api.balance(symbol_return="USD"), limit_price=0.9985)
+    # api.trade("USDCUSD", "sell", api.balance(symbol_return="USDC"), limit_price=1.0015)
 
     # api.trade("BATETH", "sell", api.balance(symbol_return="BAT"))
     # api.trade("BATUSD", "sell", api.balance(symbol_return="BAT"))
